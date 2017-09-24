@@ -5,22 +5,15 @@ import os
 import shutil
 
 
-def deserialize_json_list(list):
-    if list:
-        return [json.loads(item) for item in list]
-    else:
-        return []
-
-
-def _create_directory(directory):
+def create_directory(directory: str) -> None:
     if not os.path.exists(directory):
         os.makedirs(directory)
 
 
-def _delete_directory(directory):
+def delete_directory(directory: str) -> None:
     if os.path.exists(directory):
         shutil.rmtree(directory)
 
 
-def _touch_file(file):
+def touch_file(file: str) -> None:
     open(file, 'w').close()

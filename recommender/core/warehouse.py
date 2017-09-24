@@ -2,11 +2,10 @@
 import json
 import logging
 from abc import ABC, abstractmethod
-from collections import Generator
 from io import TextIOWrapper
 
-from core.exceptions import WarehouseException
 from core import config, utils
+from core.exceptions import WarehouseException
 
 logger = logging.getLogger(__name__)
 
@@ -36,8 +35,8 @@ class FileWarehouse(Warehouse):
 
     def cleanup(self):
         # use this during first-time setup of warehouse
-        utils._delete_directory(self.root_path)
-        utils._create_directory(self.root_path)
+        utils.delete_directory(self.root_path)
+        utils.create_directory(self.root_path)
         for file in (
                 self.ratings_file,
                 self.training_file,
@@ -47,7 +46,7 @@ class FileWarehouse(Warehouse):
                 self.recommendations_file,
                 self.users_file
         ):
-            utils._touch_file(file)
+            utils.touch_file(file)
 
     def update_ratings(self, new_ratings: list) -> None:
         # TODO deduplication
@@ -60,11 +59,11 @@ class FileWarehouse(Warehouse):
             logger.error(message)
             raise WarehouseException(message)
 
-    def update_users(self, users: Generator) -> None:
+    def update_users(self, users: list) -> None:
         try:
             with open(self.users_file, 'w') as users_file:
-                for user_info in users:
-                    self.write_row(users_file, user_info)
+                for user in users:
+                    self.write_row(users_file, user)
         except IOError as e:
             message = "Unable to update users. Error reported:{}".format(e)
             logger.error(message)

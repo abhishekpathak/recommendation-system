@@ -24,7 +24,7 @@ RATINGS_COL = 'ratings'
 ALLOWED_USER_IDS = [-1, 10001, 10002]
 
 # engine
-als_params = {
+als_opts = {
     'rank_opts': [6, 8, 10, 12],
     'reg_param_opts': [0.1, 1.0, 5.0, 10.0],
     'max_iter_opts': [3, 10, 20]

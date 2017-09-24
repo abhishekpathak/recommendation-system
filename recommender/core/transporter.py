@@ -2,9 +2,9 @@
 import json
 import logging
 
-from core.warehouse import FileWarehouse
-
 from core.models import Users
+from core.warehouse import FileWarehouse
+from core import config
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +14,7 @@ class Transporter(object):
         self.warehouse = warehouse
 
     def send_new_ratings_to_warehouse(self) -> None:
-        users = Users.get_all(self.warehouse.partition)
+        users = Users.get_all(data_partition=self.warehouse.partition)
 
         new_ratings = []
 
@@ -38,50 +38,48 @@ class Transporter(object):
     def send_recommendations_to_db(self) -> None:
         with open(self.warehouse.recommendations_file) as recommendations:
             for recommendation in recommendations:
-                user_id, transformed_recommendation = self._transform_recommendation(
-                    recommendation)
+                user_id, transformed_recommendation = \
+                    self._transform_recommendation(recommendation)
                 user = Users.get(id=user_id,
-                                 data_source=self.warehouse.partition)
+                                 data_partition=self.warehouse.partition)
                 user.set_recommendations(transformed_recommendation)
-                logger.debug(
-                    'recommendations set for user {}: {}'.format(user.id,
-                                                                 transformed_recommendation))
+                logger.debug('recommendations set for user {}: {}'
+                             .format(user.id, transformed_recommendation))
 
     def send_users_to_warehouse(self) -> None:
         # send all users who have used products (even if they have not rated)
         # to the warehouse, to generate recommendations
-        users = Users.get_all(self.warehouse.partition)
+        users = Users.get_all(data_partition=self.warehouse.partition)
 
         transformed_users = []
 
         for user in users:
-            if user.has_rated():  # TODO actually this should be user.has_used_anything()
-                transformed_user = self._transform_user(user)
-                transformed_users.append(transformed_user)
+            # TODO actually this should be user.has_used_anything()
+            if user.has_rated():
+                transformed_users.append(self._transform_user(user))
                 logger.debug('sending user {} to warehouse.'.format(user.id))
             else:
-                logger.debug(
-                    'user {} has not used any product. Not sending to warehouse.'.format(
-                        user.id))
+                logger.debug('user {} has not used any product.'
+                             'Not sending to warehouse.'.format(user.id))
 
         logger.info(
             'total users sent to warehouse: {}'.format(len(transformed_users)))
 
-        self.warehouse.update_users(users)
+        self.warehouse.update_users(transformed_users)
 
     @staticmethod
     def _transform_rating(user: Users, rating: dict) -> dict:
         return {
-            'user_id': user.id,
-            'product_id': rating['product_id'],
-            'rating': rating['rating']
+            config.USER_COL: user.id,
+            config.PRODUCT_COL: rating['product_id'],
+            config.RATINGS_COL: rating['rating']
         }
 
     @staticmethod
     def _transform_recommendation(recommendation_str: str) -> tuple:
         recommendation = json.loads(recommendation_str.strip())
 
-        user_id = recommendation['user_id']
+        user_id = recommendation[config.USER_COL]
 
         recommended_product_ids = recommendation['recommendations']
 
@@ -89,4 +87,4 @@ class Transporter(object):
 
     @staticmethod
     def _transform_user(user: Users) -> dict:
-        return {'id': user.id}
+        return {config.USER_COL: user.id}

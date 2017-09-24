@@ -12,8 +12,8 @@ from pyspark.ml.recommendation import ALS, ALSModel
 from pyspark.sql import SparkSession, DataFrame
 from pyspark.sql.utils import AnalysisException
 
-from core.warehouse import FileWarehouse
 from core import config, utils
+from core.warehouse import FileWarehouse
 
 logger = logging.getLogger(__name__)
 
@@ -42,15 +42,14 @@ class RecommendationEngine(ABC):
 
 
 class ALSRecommendationEngine(RecommendationEngine):
-
     def __init__(self, warehouse: FileWarehouse, recommendation_count=5,
-                 als_params={}, model=None):
+                 als_params=None, model=None):
 
         self.warehouse = warehouse
 
         self.recommendation_count = recommendation_count
 
-        self.als_params = als_params
+        self.als_params = {} if als_params is None else als_params
 
         self.model = model
 
@@ -64,10 +63,15 @@ class ALSRecommendationEngine(RecommendationEngine):
             .getOrCreate()
 
     def ready(self) -> bool:
-        return self.als_params != {} and self.model is not None
+        ready = self.als_params != {} and self.model is not None
+
+        if not ready:
+            logger.warning('engine is not ready.')
+
+        return ready
 
     def export(self, path):
-        utils._create_directory(path)
+        utils.create_directory(path)
 
         if self.ready():
             self._persist_model(path=path, model=self.model)
@@ -112,9 +116,8 @@ class ALSRecommendationEngine(RecommendationEngine):
                 als_opts['rank_opts'], als_opts['reg_param_opts'],
                 als_opts['max_iter_opts']):
 
-            logger.debug(
-                'training model for rank: {}, reg_param: {}, max_iter: {}...'.format(
-                    rank, reg_param, max_iter))
+            logger.debug('training model for rank: {}, reg_param: {}, max_iter:'
+                         ' {}...'.format(rank, reg_param, max_iter))
 
             current_model = ALS(rank=rank,
                                 regParam=reg_param,
@@ -184,34 +187,32 @@ class ALSRecommendationEngine(RecommendationEngine):
             users = self.spark.read.json(self.warehouse.users_file).select(
                 config.USER_COL).collect()
 
-            for user_id in users:
-                recommendations = self._generate_curated_recommendations_for_user(
-                    user_id)
-                self.warehouse.update_recommendations(user_id, recommendations)
+            for user in users:
+                recommendations = \
+                    self._generate_recommendations_for_user(user.user_id)
+                self.warehouse.update_recommendations(user.user_id, recommendations)
 
         except AssertionError:
-            logger.warning(
-                'the users file is empty. Perhaps no users have rated anything yet.')
+            logger.warning('the users file is empty. '
+                           'Perhaps no users have rated anything yet.')
 
-        except Exception as e:
-            logger.error(
-                'unable to get the list of users. Error reported: {}'.format(e))
-
-    def _generate_curated_recommendations_for_user(self, user_id: int) -> list:
+    def _generate_recommendations_for_user(self, user_id: int) -> list:
 
         assert self.ready()
 
-        logger.info(
-            'generating curated recommendations for user id: '.format(user_id))
+        logger.info('generating curated recommendations'
+                    ' for user id: {}'.format(user_id))
 
         df = self.spark.read.json(self.warehouse.products_file)
 
         df.createOrReplaceTempView("product_catalog")
 
-        candidates = self.spark.sql(
-            "SELECT {} as {}, {} FROM product_catalog".format(user_id,
-                                                              config.USER_COL,
-                                                              config.PRODUCT_COL))
+        query = "SELECT {} as {}, {} FROM product_catalog"\
+                .format(user_id, config.USER_COL, config.PRODUCT_COL)
+
+        candidates = self.spark.sql(query)
+
+        candidates.createOrReplaceTempView('candidates')
 
         logger.debug('candidate products loaded successfully.')
 
@@ -226,7 +227,8 @@ class ALSRecommendationEngine(RecommendationEngine):
         recommendations = [i.product_id for i in rows]
 
         logger.info(
-            'curated recommendations generated for user id {}.'.format(user_id))
+            'curated recommendations generated for user id {}: {}'
+            .format(user_id, recommendations))
 
         return recommendations
 
@@ -238,7 +240,8 @@ class ALSRecommendationEngine(RecommendationEngine):
         df.createOrReplaceTempView("user_ratings")
 
         candidates = self.spark.sql(
-            "SELECT product_id, sum(ratings) as overall_ratings from user_ratings group by product_id")
+            "SELECT product_id, sum(ratings) AS overall_ratings "
+            "FROM user_ratings GROUP BY product_id")
 
         rows = candidates.orderBy('overall_ratings', ascending=False).take(
             self.recommendation_count)

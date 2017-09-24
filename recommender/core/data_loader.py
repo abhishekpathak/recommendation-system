@@ -4,11 +4,10 @@ import logging
 from abc import abstractmethod, ABC
 
 from core import config
+from core.datasources.base_source import BaseSource
 from core.exceptions import ParserError
 from core.models import Products
 from core.warehouse import FileWarehouse
-
-from core.datasources.base_source import BaseSource
 
 logger = logging.getLogger(__name__)
 
@@ -49,8 +48,8 @@ class DataLoader(BaseDataLoader):
                     logger.debug('output from ratings parser :{}'.format(data))
                 except ParserError as e:
                     logger.error(
-                        "parsing error in line: {} of source file. Error reported: {}".format(
-                            line, e))
+                        "parsing error in line: {} of source file. "
+                        "Error reported: {}".format(line, e))
                     if continue_on_error:
                         continue
                     else:
@@ -78,16 +77,16 @@ class DataLoader(BaseDataLoader):
                             'output from products parser :{}'.format(data))
                     except ParserError as e:
                         logger.error(
-                            "parsing error in line: {} of source file. Error reported: {}".format(
-                                line, e))
+                            "parsing error in line: {} of source file. "
+                            "Error reported: {}".format(line, e))
                         raise
 
                     self.warehouse.write_row(products_file, data)
 
     def create_ratings_data_in_serving_layer(self,
                                              continue_on_error=False) -> None:
-        raise NotImplementedError(
-            "no support for loading historical ratings to serving layer currently.")
+        raise NotImplementedError("no support for loading historical"
+                                  " ratings to serving layer currently.")
 
     def create_product_catalog_in_serving_layer(self) -> None:
         with open(self.source.products_file,
@@ -99,11 +98,11 @@ class DataLoader(BaseDataLoader):
                     logger.debug('output from products parser :{}'.format(data))
                 except ParserError as e:
                     logger.error(
-                        "parsing error in line: {} of source file. Error reported: {}".format(
-                            line, e))
+                        "parsing error in line: {} of source file. "
+                        "Error reported: {}".format(line, e))
                     raise
 
-                Products.upsert(data_source=self.source.name,
+                Products.upsert(data_partition=self.source.name,
                                 id=data[config.PRODUCT_COL],
                                 name=data['name'],
                                 desc=data['desc'])
