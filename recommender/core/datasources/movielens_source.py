@@ -53,6 +53,11 @@ class MovieLensSource(BaseSource):
         except AssertionError:
             raise ParserError("unable to find fields in line.")
 
+        try:
+            int(fields[0])
+        except ValueError:
+            raise ParserError("product id should be an integer.")
+
         return {
             self.product_col: int(fields[0]),
             'name': fields[1],

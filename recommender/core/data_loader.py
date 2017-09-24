@@ -31,6 +31,9 @@ class BaseDataLoader(ABC):
 
 
 class DataLoader(BaseDataLoader):
+
+    products_model = Products
+
     def __init__(self, source: BaseSource, warehouse: FileWarehouse) -> None:
         self.source = source
         self.warehouse = warehouse
@@ -41,7 +44,7 @@ class DataLoader(BaseDataLoader):
         with open(self.source.ratings_file,
                   encoding=self.source.encoding) as source_ratings_file:
             for line in (next(source_ratings_file) for _ in range(10000)):
-                # for line in source_ratings_file:
+            # for line in source_ratings_file:
 
                 try:
                     data = self.source.ratings_parser(line)
@@ -102,7 +105,7 @@ class DataLoader(BaseDataLoader):
                         "Error reported: {}".format(line, e))
                     raise
 
-                Products.upsert(data_partition=self.source.name,
+                self.products_model.upsert(data_partition=self.source.name,
                                 id=data[config.PRODUCT_COL],
                                 name=data['name'],
                                 desc=data['desc'])

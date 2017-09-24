@@ -48,6 +48,10 @@ class FileWarehouse(Warehouse):
         ):
             utils.touch_file(file)
 
+    def delete(self):
+        # use this to delete the warehouse partition
+        utils.delete_directory(self.root_path)
+
     def update_ratings(self, new_ratings: list) -> None:
         # TODO deduplication
         try:
