@@ -7,6 +7,9 @@ from server.extensions import redis_conn
 
 
 class Users(object):
+
+    redis = redis_conn
+
     def __init__(self, id: int):
         self.id = id
 
@@ -25,7 +28,7 @@ class Users(object):
     def get_ratings(self) -> list:
         key = '{}_ratings_{}'.format(data_partition, self.id)
 
-        ratings_hash = redis_conn.hgetall(key)
+        ratings_hash = self.redis.hgetall(key)
 
         ratings = []
 
@@ -37,6 +40,12 @@ class Users(object):
 
         return ratings
 
+    def set_ratings(self, ratings: list) -> None:
+        key = '{}_ratings_{}'.format(data_partition, self.id)
+
+        for rating in ratings:
+            self.redis.hset(key, rating['product_id'], rating['rating'])
+
     def get_products_used(self) -> list:
         ratings = self.get_ratings()
 
@@ -47,9 +56,18 @@ class Users(object):
 
         return self._get_recommendations_for_key(key)
 
-    @staticmethod
-    def _get_recommendations_for_key(key):
-        value = redis_conn.get(key)
+    @classmethod
+    def get_default_recommendations(cls):
+        key = '{}_recommendations_-1'.format(data_partition)
+
+        return cls._get_recommendations_for_key(key)
+
+    def has_rated(self):
+        return self.get_ratings() != []
+
+    @classmethod
+    def _get_recommendations_for_key(cls, key):
+        value = cls.redis.get(key)
 
         if value:
             recommendations = json.loads(value)
@@ -58,23 +76,11 @@ class Users(object):
 
         return recommendations
 
-    @classmethod
-    def get_default_recommendations(cls):
-        key = '{}_recommendations_-1'.format(data_partition)
-
-        return cls._get_recommendations_for_key(key)
-
-    def set_ratings(self, ratings: list) -> None:
-        key = '{}_ratings_{}'.format(data_partition, self.id)
-
-        for rating in ratings:
-            redis_conn.hset(key, rating['product_id'], rating['rating'])
-
-    def has_rated(self):
-        return self.get_ratings() != []
-
 
 class Products(object):
+
+    redis = redis_conn
+
     def __init__(self, id: int, name: str, desc: str):
         self.id = id
         self.name = name
@@ -84,7 +90,7 @@ class Products(object):
     def get(cls, id: int):
         key = '{}_products_{}'.format(data_partition, id)
 
-        meta = redis_conn.get(key)
+        meta = cls.redis.get(key)
 
         if meta:
             meta = json.loads(meta)
@@ -92,10 +98,11 @@ class Products(object):
             return cls(id=id, name=meta['name'], desc=meta['desc'])
 
     @classmethod
-    def get_all(cls) -> Generator:
-        # products catalog can be large, use a generator
-        return (cls.get(key) for key in
-                redis_conn.keys('{}_products_*'.format(data_partition)))
+    def get_all(cls) -> list:
+        # products catalog can be large
+        # TODO test for possible use cases and if fine, use a generator instead
+        return [cls.get(key) for key in
+                cls.redis.keys('{}_products_*'.format(data_partition))]
 
     @classmethod
     def upsert(cls, id, name, desc) -> None:
@@ -106,4 +113,4 @@ class Products(object):
             'desc': desc
         })
 
-        redis_conn.set(key, value)
+        cls.redis.set(key, value)
