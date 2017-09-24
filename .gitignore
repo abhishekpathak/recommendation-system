@@ -99,3 +99,20 @@ ENV/
 
 # mypy
 .mypy_cache/
+
+#editor files
+.idea/
+
+#spark-related
+metastore_db
+checkpoint/
+models/
+spark-warehouse/
+
+#os-related
+.DS_Store
+
+# data stores
+external_data
+internal_data
+warehouse_dir
