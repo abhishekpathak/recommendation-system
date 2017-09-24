@@ -1,0 +1,22 @@
+{
+  "name": "client",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "loaders.css": "0.1.2",
+    "react": "^15.6.1",
+    "react-bootstrap": "0.31.3",
+    "react-dom": "^15.6.1",
+    "react-loaders": "2.5.0",
+    "react-rater": "0.4.4",
+    "react-scripts": "1.0.13",
+    "react-slick": "0.15.4",
+    "slick-carousel": "1.7.1"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test --env=jsdom",
+    "eject": "react-scripts eject"
+  }
+}

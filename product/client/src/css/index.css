@@ -1,0 +1,12 @@
+body {
+  margin: 0;
+  padding: 0;
+  font-family: sans-serif;
+}
+
+.product {
+  width:120px;
+  height:200px;
+  background:grey;
+  margin: 10px;
+}
