@@ -71,9 +71,7 @@ class Users(object):
             redis_conn.hset(key, rating['product_id'], rating['rating'])
 
     def has_rated(self):
-        key = '{}_ratings_{}'.format(data_partition, self.id)
-
-        return redis_conn.get(key) is not None
+        return self.get_ratings() != []
 
 
 class Products(object):

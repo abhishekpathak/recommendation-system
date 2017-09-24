@@ -49,7 +49,7 @@ class RatingsResource(Resource):
         try:
             assert self._has_valid_ratings_data(request)
         except AssertionError:
-            message = 'missing payload: ratings'
+            message = "invalid ratings data."
             logger.error(message)
             raise HTTPBadRequest(message, payload={'message': message})
 
