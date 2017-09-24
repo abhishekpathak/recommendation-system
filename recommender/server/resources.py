@@ -2,96 +2,95 @@
 import logging
 from http import HTTPStatus
 
-from flask import request
+from flask import request, Request
 from flask_restful import Resource
 from werkzeug.exceptions import BadRequest
 
-from core.engine import ALSRecommendationEngine
-from server import config
+from core.engines import ALSRecommendationEngine
 from server import tasks, api
+from server.exceptions import HTTPBadRequest, HTTPInternalServerError
+from server.extensions import engine_path
 
 logger = logging.getLogger(__name__)
 
 
 class EngineResource(Resource):
-
     def get(self, engine_id: str):
-        current_engine = ALSRecommendationEngine.import_from_path(config.engine_path)
+        try:
+            assert engine_id.lower() == 'current'
+        except AssertionError:
+            message = 'Only engine resource supported is the current one.'
+            logger.error(message)
+            raise HTTPBadRequest(message, payload={'message': message})
 
-        response_body = {
+        try:
+            current_engine = ALSRecommendationEngine.import_from_path(
+                engine_path)
+        except Exception as e:
+            message = "Error loading the recommendation engine."
+            logger.error(message, *e.args)
+            raise HTTPInternalServerError(message, payload={'message': message})
+
+        return {
             'warehouse_partition': current_engine.warehouse.partition,
             'recommendation count': current_engine.recommendation_count,
             'ALS parameters': current_engine.als_params,
         }
-        response_status = HTTPStatus.OK
-        response_headers = None
-        return response_body, response_status, response_headers
 
 
 class EnginesResource(Resource):
+    @staticmethod
+    def _has_valid_als_opts(request_obj: Request) -> bool:
+        try:
+            als_opts = request_obj.get_json()['als_opts']
+        except (BadRequest, KeyError):
+            return False
+
+        required_keys = ('rank_opts', 'reg_param_opts', 'max_iter_opts')
+
+        for key in required_keys:
+            assert key in als_opts.keys()
+            assert isinstance(als_opts[key], list)
 
     def post(self):
         try:
-            als_opts = request.get_json()['als_opts']
-        except (BadRequest, KeyError):
-            message = 'missing payload: als_opts'
+            assert self._has_valid_als_opts(request)
+        except AssertionError:
+            message = 'ALS opts seem invalid.Please check the payload.'
             logger.error(message)
-            response_body = {
-                'message': message
-            }
-            response_status = HTTPStatus.BAD_REQUEST
-            response_headers = None
-            return response_body, response_status, response_headers
+            raise HTTPBadRequest(message, payload={'message': message})
 
-        try:
-            self._validate_als_opts(als_opts)
-        except AssertionError as e:
-            message = 'invalid als_opts: {}'.format(e)
-            logger.error(message)
-            response_body = {
-                'message': message
-            }
-            response_status = HTTPStatus.BAD_REQUEST
-            response_headers = None
-            return response_body, response_status, response_headers
+        als_opts = request.get_json()['als_opts']
 
-        task = tasks.train_new_model.delay(config.engine_path, **als_opts)
+        task = tasks.train_new_model.delay(engine_path, **als_opts)
+
         message = 'new job created with id {}'.format(task.id)
+
         logger.info(message)
+
         response_body = {
             'message': message
         }
+
         response_status = HTTPStatus.ACCEPTED
+
         response_headers = {
             'Location': api.url_for(TaskResource, task_id=task.id)
         }
         return response_body, response_status, response_headers
 
-    @staticmethod
-    def _validate_als_opts(als_opts: dict) -> None:
-        required_keys = {'rank_opts', 'reg_param_opts', 'max_iter_opts'}
-
-        assert set(als_opts.keys()) == required_keys, 'missing required keys.'
-
-        for key in als_opts.keys():
-            assert isinstance(als_opts[key], list), 'key {} is not a tuple.'.format(key)
-
 
 class TaskResource(Resource):
-
     def get(self, task_id: str):
         task = tasks.train_new_model.AsyncResult(task_id)
+
+        response_body = {'state': task.state}
+
         if task.state == 'SUCCESS':
-            response_data = {
-                'state': task.state
-            }
             response_status = HTTPStatus.SEE_OTHER
             response_headers = {
                 'Location': api.url_for(EngineResource, engine_id='current')
             }
-            return response_data, response_status, response_headers
+            return response_body, response_status, response_headers
         else:
-            response = {
-                    'state': task.state,
-                }
-        return response
+            return response_body

@@ -2,7 +2,7 @@
 
 import logging
 
-from core.engine import ALSRecommendationEngine
+from core.engines import ALSRecommendationEngine
 from server.extensions import celery
 
 logger = logging.getLogger(__name__)
