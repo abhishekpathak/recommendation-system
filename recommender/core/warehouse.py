@@ -210,8 +210,7 @@ class FileWarehouse(Warehouse):
 
         Args:
             handle: the handle to the file to be written to.
-            data: A dict containing the data to be added. Will be added as a
-            new json line.
+            data: A dict containing the data to be added. Will be added as a new line.
         """
         json.dump(data, handle)
         handle.write('\n')

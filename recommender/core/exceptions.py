@@ -2,20 +2,10 @@
 
 
 class ParserError(Exception):
-    pass
-
-
-class RecommenderError(Exception):
-    pass
-
-
-class WarehouseWriterError(Exception):
-    pass
-
-
-class WarehouseReaderError(Exception):
+    """ Raised when a source parser fails. """
     pass
 
 
 class WarehouseException(Exception):
+    """ Raised when the warehouse encounters some internal error. """
     pass
