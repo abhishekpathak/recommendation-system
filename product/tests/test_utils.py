@@ -5,6 +5,7 @@ from server import utils
 
 
 class TestUtils(object):
+
     def test_deserialize_json_list(self):
         element_1 = {'a': 1, 'b': 2}
         element_2 = {'this test': 'good one'}
