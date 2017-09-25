@@ -19,6 +19,7 @@ CELERY_RESULT_BACKEND = 'redis://localhost:6379'
 USER_COL = 'user_id'
 PRODUCT_COL = 'product_id'
 RATINGS_COL = 'ratings'
+DEFAULT_USERID = -1
 
 # models
 ALLOWED_USER_IDS = [-1, 10001, 10002]
