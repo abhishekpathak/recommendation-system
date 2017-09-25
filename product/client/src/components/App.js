@@ -1,15 +1,15 @@
 import React, { Component } from 'react';
-import ProductCarousel from './ProductCarousel'
-import RecommendationsCarousel from './RecommendationCarousel'
+import ProductCarousel from './ProductCarousel';
+import RecommendationsCarousel from './RecommendationCarousel';
 import '../css/App.css';
-import TopNav from "./TopNavBar";
+import TopNav from './TopNavBar';
 
 class App extends Component {
   render() {
     return (
       <div className="App">
 
-        <TopNav name={"movie"}/>
+        <TopNav name={'movie'}/>
 
         <h1> Rate some movies! </h1>
 
@@ -17,7 +17,7 @@ class App extends Component {
 
         <h1> Your Recommendations </h1>
 
-        <RecommendationsCarousel />
+        <RecommendationsCarousel/>
 
       </div>
     );
