@@ -25,7 +25,7 @@ class TestMovieLensSource(object):
         with pytest.raises(ParserError):
             source.ratings_parser(line)
 
-    def test_ratings_parser(self, source):
+    def test_ratings_parser_parses_fields(self, source):
         line = "1::2804::5::978300719"
 
         expected = {
@@ -55,7 +55,7 @@ class TestMovieLensSource(object):
         with pytest.raises(ParserError):
             source.product_parser(line)
 
-    def test_product_parser(self, source):
+    def test_product_parser_parses_fields(self, source):
         line = "1::Toy Story (1995)::Animation|Children's|Comedy"
 
         expected = {
