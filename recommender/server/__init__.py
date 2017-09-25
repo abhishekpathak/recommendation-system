@@ -10,6 +10,7 @@ from server.settings import log
 
 app = Flask(__name__)
 
+# enable CORS for this app
 CORS(app)
 
 api = Api(app)
@@ -18,4 +19,5 @@ log.configure_logging()
 
 from server import views
 
+# Set up a global spark session.
 ALSRecommendationEngine._load_spark_session()

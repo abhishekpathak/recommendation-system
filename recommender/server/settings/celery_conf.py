@@ -1,15 +1,17 @@
 # -*- coding: utf-8 -*-
-
-import logging
-
 from celery import Celery
-
-logger = logging.getLogger(__name__)
 
 from server import config
 
+""" Celery configuration module.
+
+"""
 
 def make_celery(app):
+    """ Flask integration with celery. Taken from
+    http://flask.pocoo.org/docs/0.12/patterns/celery/
+
+    """
     celery = Celery(app.import_name, backend=config.CELERY_RESULT_BACKEND,
                     broker=config.CELERY_BROKER_URL)
     celery.conf.update(app.config)
