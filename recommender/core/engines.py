@@ -13,7 +13,7 @@ from pyspark.sql import SparkSession, DataFrame
 from pyspark.sql.utils import AnalysisException
 
 from core import config, utils
-from core.warehouse import FileWarehouse, Warehouse
+from core.warehouse import FileWarehouse
 
 logger = logging.getLogger(__name__)
 
@@ -36,8 +36,8 @@ class RecommendationEngine(ABC):
 
     """
 
-    def __init__(self, warehouse: Warehouse, recommendation_count: int, model,
-                 model_params: dict):
+    def __init__(self, warehouse: FileWarehouse, recommendation_count: int,
+                 model, model_params: dict):
         self.warehouse = warehouse
 
         self.recommendation_count = recommendation_count
@@ -329,6 +329,7 @@ class ALSRecommendationEngine(RecommendationEngine):
 
         Returns:
             same as in `RecommendationEngine.generate_recommendations_for_user`.
+
         """
         assert self.ready()
 
@@ -352,24 +353,31 @@ class ALSRecommendationEngine(RecommendationEngine):
 
         logger.info(
             'curated recommendations generated for user id {}: {}'
-                .format(user_id, recommendations))
+            .format(user_id, recommendations))
 
         return recommendations
 
     def generate_default_recommendations(self) -> list:
+        """ Implements a method to generate the default recommendations as
+        defined in `RecommendationEngine`.
+
+        Args:
+            same as in `RecommendationEngine.generate_default_recommendations`.
+
+        Returns:
+            same as in `RecommendationEngine.generate_default_recommendations`.
+
+        """
         logger.info('generating the default recommendations...')
 
+        # read the product catalog and recommend the overall top rated products.
         df = self.spark.read.json(self.warehouse.ratings_file)
-
         df.createOrReplaceTempView("user_ratings")
-
         candidates = self.spark.sql(
             "SELECT product_id, sum(ratings) AS overall_ratings "
             "FROM user_ratings GROUP BY product_id")
-
         rows = candidates.orderBy('overall_ratings', ascending=False).take(
             self.recommendation_count)
-
         recommendations = [i.product_id for i in rows]
 
         logger.info('default recommendations generated.')
@@ -378,11 +386,13 @@ class ALSRecommendationEngine(RecommendationEngine):
 
     @staticmethod
     def _load_params(path) -> dict:
+        """ instantiates the engine params as a dict from a file path. """
         with open('{}/{}'.format(path, 'params.json')) as params_file:
             return json.load(params_file)
 
     @staticmethod
     def _load_model(path) -> ALSModel:
+        """ instantiates a model object from a file path. """
         try:
             return ALSModel.load(path)
         except (Py4JJavaError, AnalysisException):
@@ -390,11 +400,17 @@ class ALSRecommendationEngine(RecommendationEngine):
 
     @staticmethod
     def _persist_model(path: str, model: ALSModel) -> None:
+        """ serializes the model object to a path on disk. """
         model.write().overwrite().save(path)
 
     @staticmethod
     def _persist_params(path: str, warehouse_partition, recommendation_count,
                         model_params) -> None:
+        """ serializes the model params to a file on disk.
+
+        Args:
+            the various engine params.
+        """
         params = {
             'warehouse_partition': warehouse_partition,
             'recommendation_count': recommendation_count,
@@ -406,8 +422,18 @@ class ALSRecommendationEngine(RecommendationEngine):
 
     @staticmethod
     def _compute_rmse(model: ALSModel, data: DataFrame) -> float:
-        predictions = model.transform(data)
+        """ computes the RMSE error for a given model .
 
+        Args:
+            model: the model instance
+
+            data: a spark DataFrame on which to run the model and compare the
+            predicted vs actual ratings.
+
+        Returns:
+            rmse : the root-mean-squared error value
+        """
+        predictions = model.transform(data)
         # remove all NaN values
         predictions = predictions.na.drop(subset=["prediction"])
 
