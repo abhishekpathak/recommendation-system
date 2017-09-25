@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 class Transporter(object):
-    """ This class represents the data pipeline.
+    """ This class represents the data pipeline and ETL layers.
 
     A Transporter is responsible for keeping data in sync between the serving
     database and the warehouse.

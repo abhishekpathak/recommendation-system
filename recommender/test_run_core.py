@@ -5,6 +5,7 @@ import logging
 from core.data_loader import DataLoader
 from core.datasources.movielens_source import MovieLensSource
 from core.engines import ALSRecommendationEngine
+from core.models import Users
 from core.transporter import Transporter
 from core.warehouse import FileWarehouse
 from core import config
@@ -17,7 +18,7 @@ source = MovieLensSource('movielens',
 
 warehouse = FileWarehouse(partition=source.name)
 
-transporter = Transporter(warehouse=warehouse)
+transporter = Transporter(warehouse=warehouse, user_model=Users)
 
 warehouse.cleanup()
 
