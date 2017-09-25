@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
-import Product from './product';
+import Product from './Product';
 import Slider from 'react-slick';
-import Rating from './rating';
+import Rating from './Rating';
 import 'react-rater/lib/react-rater.css';
 import {config } from '../config.js';
 

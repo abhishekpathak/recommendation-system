@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
-import ProductCarousel from './product_carousel'
-import RecommendationsCarousel from './recommendations_carousel'
+import ProductCarousel from './ProductCarousel'
+import RecommendationsCarousel from './RecommendationCarousel'
 import '../css/App.css';
-import TopNav from "./top_nav";
+import TopNav from "./TopNavBar";
 
 class App extends Component {
   render() {

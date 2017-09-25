@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import Product from './product';
+import Product from './Product';
 import Slider from 'react-slick';
 import {config } from '../config.js';
 
