@@ -31,7 +31,7 @@ A simple ALS-based recommendation system working for a dummy SaaS product. This 
 ## Coding assumptions
 * **The transport layer** - This project uses a transporter object that directly interacts with data stores. In the real world, this would typically be a bunch of pipeline jobs that leverage a messaging system like Kafka.
 * **The serving database** - This project uses redis (I was already using it as a message broker), with a quick-and-dirty ORM layer on top. However, a RDBMS is much more suited to the job.
-* **The warehouse** - For this project, I've prototyped a warehouse which stores and processes json files on the local file system. In the real world, this would typically be a distributed big data processing system such as Hadoop. 
+* **The warehouse** - For this project, I've prototyped a warehouse which stores and processes files (each line a json) on the local file system. In the real world, this would typically be a distributed big data processing system such as Hadoop. 
 
 
 
