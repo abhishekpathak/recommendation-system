@@ -102,8 +102,7 @@ class DataLoader(BaseDataLoader):
         with open(self.source.ratings_file,
                   encoding=self.source.encoding) as source_ratings_file:
 
-            for line in (next(source_ratings_file) for _ in range(10000)):
-            # for line in source_ratings_file:
+            for line in source_ratings_file:
 
                 try:
                     data = self.source.ratings_parser(line)
@@ -117,8 +116,14 @@ class DataLoader(BaseDataLoader):
                     else:
                         raise
 
-                files_to_write = (files[data['metadata']['type']],
-                                  files['ratings'])
+                # write the line to the ratings file, and one of
+                # the training, test or validation files.
+                # the logic for choosing which of the latter 3 files
+                # should ideally be with the data loader.
+                # For convenience, here type comes from
+                # the source parser and the loader uses it directly.
+                files_to_write = (files['ratings'],
+                                  files[data['metadata']['type']])
 
                 for file in files_to_write:
                     self.warehouse.write_row(file, data['payload'])
