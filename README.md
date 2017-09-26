@@ -1,6 +1,6 @@
 # Recommendation System
 
-This is an end-to-end design of how a recommendation system can be integrated with a SaaS product.
+A simple ALS-based recommendation system working for a dummy SaaS product. This example takes the [Movielens 1M dataset](https://grouplens.org/datasets/movielens/1m/) and makes a movie recommender ([screenshot](/extras/screenshot_product.jpg)). The datasets are pluggable, so this system can be extended to any product.
 
 ## System design
 
