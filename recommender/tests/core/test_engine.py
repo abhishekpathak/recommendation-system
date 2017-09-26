@@ -1,17 +1,14 @@
 # -*- coding: utf-8 -*-
 
 import pytest
-
-from core.datasources.movielens_source import MovieLensSource
-from core.engines import ALSRecommendationEngine
-from core.warehouse import FileWarehouse
 from mock import MagicMock
+
+from core.engines import ALSRecommendationEngine
 
 
 class TestRecommendationEngine(object):
-
     @pytest.fixture
-    def warehouse(self, mocker, source):
+    def warehouse(self, source):
         warehouse = MagicMock()
 
         return warehouse
@@ -31,4 +28,3 @@ class TestRecommendationEngine(object):
         engine.model = None
 
         assert not engine.ready()
-

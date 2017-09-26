@@ -10,7 +10,7 @@ class TestMovieLensSource(object):
 
     @pytest.fixture
     def source(self):
-        source = MovieLensSource('test')
+        source = MovieLensSource('test', ratings_file='external_data/test/ratings.dat', products_file='external_data/test/products.dat')
         return source
 
     def test_ratings_parser_throws_error_null_input(self, source):
