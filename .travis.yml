@@ -1,11 +1,20 @@
 language: python
+
 python:
   - "3.6"
-# command to install dependencies
+
+env:
+    global:
+        - SPARK_HOME=/tmp/spark
+
+before_install:
+  - ./recommender/install_spark.sh
+
 install:
   - pip install -r recommender/requirements.txt
-# command to run tests
+
 before_script:
   - cd recommender
+
 script:
   - pytest tests
