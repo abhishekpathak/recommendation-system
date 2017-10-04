@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/abhishekpathak/recommendation-system.svg?branch=master)](https://travis-ci.org/abhishekpathak/recommendation-system)
+
 # Recommendation System
 
 A simple ALS-based recommendation system working for a dummy SaaS product. This example takes the [Movielens 1M dataset](https://grouplens.org/datasets/movielens/1m/) and makes a movie recommender ([screenshot](/extras/screenshot_product.jpg)). The datasets are pluggable, so this system can be extended to any product.
