@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/abhishekpathak/recommendation-system.svg?branch=master)](https://travis-ci.org/abhishekpathak/recommendation-system)
+[![Build Status](https://travis-ci.org/abhishekpathak/recommendation-system.svg?branch=master)](https://travis-ci.org/abhishekpathak/recommendation-system) [![Code Climate](https://codeclimate.com/github/codeclimate/codeclimate/badges/gpa.svg)](https://codeclimate.com/github/codeclimate/codeclimate)
 
 # Recommendation System
 
