@@ -113,6 +113,4 @@ spark-warehouse/
 .DS_Store
 
 # data stores
-external_data
-internal_data
 warehouse_dir
